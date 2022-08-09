@@ -8,14 +8,25 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type Orders struct {
+type Attenders struct {
+	Attender string `json:"attender"`
+	Num int `json:"num"`
+	RealNum int `json:"realNum"`
+	PayNum int `json:"payNum"`
+	Ispay bool `json:"ispay"`
+};
+
+type Order struct {
 	Price string `json:"price"`
 	Type string `json:"type"`
 	User string `json:"user"`
 	RealPrice int `json:"realPrice"`
+	Target string `json:"target"`
+	RealTarget int `json:"realTarget"`
+	Attenders []Attenders `json:"attenders"`
 }
 type Message struct {
-	Message []Orders `json:"message"`
+	Message []Order `json:"message"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -25,6 +36,8 @@ var upgrader = websocket.Upgrader{
 		return true
 	},
 }
+
+var lastMessage Message 
 
 func main() {
 	r := gin.Default()
@@ -65,20 +78,28 @@ func main() {
 			// }
 		// }
 	})
+	r.GET("/last", func(c *gin.Context) {
+		c.JSON(http.StatusOK, lastMessage)
+	})
+	r.GET("/clear", func(c *gin.Context) {
+		lastMessage = Message{}
+		c.JSON(http.StatusOK, lastMessage)
+	})
 	r.Run(":5000") // listen and serve on 0.0.0.0:8080
 }
 
 func read(hub *Hub, client *websocket.Conn) {
 	for {
 		var message Message
-		
 		err := client.ReadJSON(&message)
-		fmt.Println(message)
 		if err != nil {
 			delete(hub.clients, client)
 			fmt.Printf("errror occurred: %v:", err)
 			break
 		}
+
+		lastMessage = message
+
 		hub.broadcast <- message
 	}
 }
