@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	_ "github.com/codyguo/godaemon"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
